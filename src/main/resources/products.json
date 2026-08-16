@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Kürk Mantolu Madonna",
+    "price": 45.00,
+    "stock": 100,
+    "category": { "id": 1 },
+    "author": { "id": 1 }
+  },
+  {
+    "name": "İçimizdeki Şeytan",
+    "price": 55.00,
+    "stock": 150,
+    "category": { "id": 1 },
+    "author": { "id": 1 }
+  },
+  {
+    "name": "Vakıf",
+    "price": 120.00,
+    "stock": 50,
+    "category": { "id": 2 },
+    "author": { "id": 2 }
+  },
+  {
+    "name": "Benim Ağzımdan Haliç Hikayeleri",
+    "price": 85.00,
+    "stock": 200,
+    "category": { "id": 3 },
+    "author": { "id": 3 }
+  },
+  {
+    "name": "Vakıf ve İmparatorluk",
+    "price": 125.00,
+    "stock": 40,
+    "category": { "id": 2 },
+    "author": { "id": 2 }
+  }
+]

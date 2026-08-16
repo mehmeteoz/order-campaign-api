@@ -1,0 +1,26 @@
+[
+  {
+    "campaignName": "Kategori İndirimi (%10)",
+    "type": "CATEGORY_DISCOUNT",
+    "ruleDetails": "{\"percentage\": 10.0}",
+    "isActive": true
+  },
+  {
+    "campaignName": "Toplam Sepet İndirimi (500 TL üzeri %15)",
+    "type": "TOTAL_DISCOUNT",
+    "ruleDetails": "{\"minAmount\": 500.0, \"percentage\": 15.0}",
+    "isActive": true
+  },
+  {
+    "campaignName": "3 Al 2 Öde Kampanyası",
+    "type": "BUY_X_PAY_X",
+    "ruleDetails": "{\"itemId\": 2, \"buy\": 3, \"pay\": 2}",
+    "isActive": true
+  },
+  {
+    "campaignName": "Toplam Sepet İndirimi (500 TL üzeri %15)",
+    "type": "TOTAL_DISCOUNT",
+    "ruleDetails": "{\"minAmount\": 500.0, \"percentage\": 15.0}",
+    "isActive": false
+  }
+]
