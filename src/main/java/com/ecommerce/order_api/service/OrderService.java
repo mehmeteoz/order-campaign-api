@@ -10,14 +10,18 @@ import com.ecommerce.order_api.exception.ProductNotFoundExeption;
 import com.ecommerce.order_api.repository.OrderRepository;
 import com.ecommerce.order_api.repository.ProductRepository;
 import lombok.Locked;
+
+
 import org.apache.coyote.Request;
 import org.hibernate.ReadOnlyMode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,8 +31,12 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CampaignEngine campaignEngine;
 
-    private static final BigDecimal FREE_SHIPPING_LIMIT = new BigDecimal("50.00");
-    private static final BigDecimal SHIPPING_COST = new BigDecimal("10.00");
+    @Value("${shipping.free-limit}")
+    private BigDecimal FREE_SHIPPING_LIMIT;
+
+    @Value("${shipping.cost}")
+    private BigDecimal SHIPPING_COST;
+
 
     public OrderService(ProductRepository productRepository, OrderRepository orderRepository,CampaignEngine campaignEngine) {
         this.productRepository = productRepository;
@@ -47,7 +55,7 @@ public class OrderService {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new ProductNotFoundExeption("Product not found. ID: " + itemRequest));
             if(product.getStock() < itemRequest.quantity()) {
-                throw new InsufficientStockException("Insufficient stock! Item: " + itemRequest + " quantity: " + product.getStock());
+                throw new InsufficientStockException("Insufficient stock! Item ID: " + itemRequest.productId() + " quantity: " + product.getStock());
             }
 
             product.setStock(product.getStock() - itemRequest.quantity());

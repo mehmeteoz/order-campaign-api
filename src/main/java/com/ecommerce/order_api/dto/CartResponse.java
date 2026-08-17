@@ -8,6 +8,11 @@ public record CartResponse (
         Long id,
         List<CartItemResponse> items,
         String sessionId,
+        BigDecimal totalAmount,
+        Long appliedCampaignId,
+        BigDecimal discountAmount,
+        BigDecimal shippingCost,
+        BigDecimal finalAmount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt ) {
 }

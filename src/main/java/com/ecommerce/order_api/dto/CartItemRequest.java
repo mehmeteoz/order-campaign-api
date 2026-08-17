@@ -1,13 +1,9 @@
 package com.ecommerce.order_api.dto;
 
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.List;
 
 public record CartItemRequest(
         @NotNull Long productId,
-        @NotEmpty @Valid List<CartItemRequest> items) {
+        @NotNull @Min(1) Integer quantity) {
 }
