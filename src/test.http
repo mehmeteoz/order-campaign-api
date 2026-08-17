@@ -9,6 +9,10 @@ x-api-key: VerySecretApiKey123
   {
     "productId": 2,
     "quantity": 6
+  },
+  {
+    "productId": 1,
+    "quantity": 10
   }
 ]
 }
