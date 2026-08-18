@@ -60,10 +60,10 @@ public class CartService {
                     .orElse(null);
 
             int newQuantity = (existingCartItem != null ? existingCartItem.getQuantity() : 0) +
-                    itemRequest.quantity(); // <-- quantity is red, bide burayı çok anlamadım
+                    itemRequest.quantity();
 
             if (product.getStock() < newQuantity) {
-                throw  new InsufficientStockException("Insufficient stock! Item: " + product.getName() + ", quantity: " + newQuantity);
+                throw  new InsufficientStockException("Insufficient stock! Item: " + product.getName() + ", quantity: " + product.getStock());
             }
 
             if (existingCartItem != null) {
