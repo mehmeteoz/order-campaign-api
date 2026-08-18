@@ -86,7 +86,7 @@ public class CartService {
         List<CartItemResponse> itemResponses = new ArrayList<>();
 
         for (CartItem cartItem : savedCart.getCartItems()) {
-            BigDecimal itemTotal = BigDecimal.ZERO;
+            BigDecimal itemTotal = cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
             totalAmount = totalAmount.add(itemTotal);
 
             OrderItem orderItem = new OrderItem();
@@ -108,7 +108,7 @@ public class CartService {
         BigDecimal amountAfterDiscount = totalAmount.subtract(discountAmount);
         BigDecimal shippingAmount = BigDecimal.ZERO;
 
-        if (amountAfterDiscount.compareTo(FREE_SHIPPING_LIMIT) > 0) { shippingAmount = SHIPPING_COST; }
+        if (amountAfterDiscount.compareTo(FREE_SHIPPING_LIMIT) < 0) { shippingAmount = SHIPPING_COST; }
 
         BigDecimal finalAmount = amountAfterDiscount.add(shippingAmount);
         Long appliedCampaignId = campaignResult.appliedCampaign() != null ?

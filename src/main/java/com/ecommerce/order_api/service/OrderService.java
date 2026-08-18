@@ -134,6 +134,7 @@ public class OrderService {
             orderItems.add(orderItem);
 
             BigDecimal itemTotal = product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            totalAmount = totalAmount.add(itemTotal);
         }
 
         order.setOrderItems(orderItems);
