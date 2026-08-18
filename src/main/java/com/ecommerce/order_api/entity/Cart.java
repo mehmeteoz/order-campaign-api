@@ -24,7 +24,10 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItems = new ArrayList<>();
 
-    private LocalDateTime createdAt  = LocalDateTime.now();
-    private LocalDateTime updatedAt  = LocalDateTime.now();
+    @org.hibernate.annotations.CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @org.hibernate.annotations.UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

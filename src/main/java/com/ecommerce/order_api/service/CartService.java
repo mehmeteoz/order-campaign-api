@@ -78,6 +78,7 @@ public class CartService {
             }
         }
 
+        cart.setUpdatedAt(java.time.LocalDateTime.now());
         Cart savedCart = cartRepository.save(cart);
 
         // 6. Finansal hesaplamaları (CampaignEngine ile indirim, Kargo vb.) yapıp CartResponse DTO'sunu dön

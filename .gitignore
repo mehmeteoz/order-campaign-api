@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Custom/OS ###
+*.log
+.env
+.DS_Store

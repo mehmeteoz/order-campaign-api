@@ -4,7 +4,7 @@ Content-Type: application/json
 x-api-key: VerySecretApiKey123
 
 {
-  "sessionId": "MY_AWESOME_SESSION_124",
+  "sessionId": "MY_AWESOME_SESSION_125",
   "items": [
     {
       "productId": 1,
@@ -21,7 +21,7 @@ Content-Type: application/json
 x-api-key: VerySecretApiKey123
 
 {
-  "sessionId": "MY_AWESOME_SESSION_123",
+  "sessionId": "MY_AWESOME_SESSION_125",
   "items": [
     {
       "productId": 2,
