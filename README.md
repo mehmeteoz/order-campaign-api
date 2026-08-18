@@ -1,6 +1,6 @@
 # Order & Campaign Service
 
-A REST API built with Spring Boot 3 for managing shopping orders and dynamically evaluating campaign discounts.
+A REST API built with Spring Boot 3 for managing shopping carts, evaluating campaign discounts dynamically, and processing orders.
 
 ## Tech Stack
 
@@ -25,7 +25,7 @@ This single command:
 - Auto-generates database schemas via Hibernate DDL
 - Seeds the database with default products, categories, authors, and campaigns.
 
-**API base URL:** `http://localhost:8080/api/v1/orders`
+**API base URL:** `http://localhost:8080/api/v1`
 
 ## Authentication
 
@@ -41,12 +41,19 @@ x-api-key: VerySecretApiKey123
 
 ## API Endpoints
 
+### Carts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/carts/add-items` | Add items to a shopping cart. Auto-creates cart if it doesn't exist and evaluates campaigns on the fly. |
+
 ### Orders
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/orders` | Create an order with items, auto-applying the best campaign discount |
-| `GET` | `/api/v1/orders/{id}` | Get detailed order information including financial breakdown |
+| `POST` | `/api/v1/orders/from-cart/{sessionId}` | Checkout flow. Converts a cart into an order, deducts stock, and deletes the cart. |
+| `POST` | `/api/v1/orders` | Create an order directly bypassing the cart (Legacy method) |
+| `GET`  | `/api/v1/orders/{id}` | Get detailed order information including financial breakdown |
 
 ## Campaign Engine
 
@@ -73,18 +80,19 @@ Shipping is calculated after the campaign discount is applied.
 
 ```
 src/main/java/com/ecommerce/order_api/
-├── controller/         # OrderController
+├── controller/         # OrderController, CartController
 ├── service/            
-│   ├── OrderService    # Order creation, stock check, financial calculations
+│   ├── OrderService    # Order creation, checkout flow
+│   ├── CartService     # Cart management, item upserts, lazy initialization
 │   ├── CampaignEngine  # Evaluates active campaigns, picks the best one
 │   └── strategy/       # Strategy Pattern Implementation
-│       ├── CampaignStrategy              # Contract for all campaigns
-│       ├── BuyXGetYStrategy              # Buy X Pay Y implementation
-│       ├── CategoryDiscountStrategy      # Category based % discount
-│       └── TotalAmountDiscountStrategy   # Cart total based % discount
-├── entity/             # Order, OrderItem, Product, Campaign, etc.
-├── dto/                # OrderRequest, OrderResponse (Record classes)
-├── repository/         # Spring Data JPA Repositories (with @Cacheable)
+│       ├── CampaignStrategy
+│       ├── BuyXGetYStrategy
+│       ├── CategoryDiscountStrategy
+│       └── TotalAmountDiscountStrategy
+├── entity/             # Order, Cart, CartItem, Product, Campaign, etc.
+├── dto/                # Request/Response DTOs (Record classes)
+├── repository/         # Spring Data Repositories (Order, Cart, Product, Campaign)
 ├── security/           # ApiKeyFilter for Authentication
 ├── exception/          # GlobalExceptionHandler, InsufficientStockException
 └── seeder/             # DataSeeder (CommandLineRunner for initial data)
@@ -124,24 +132,36 @@ public enum CampaignType {
 }
 ```
 
-### Order Creation Flow
+### Cart Add Items Flow (Lazy Upsert)
 
 ```
-POST /api/v1/orders
-  └── Validate Request payload (@Valid DTOs)
-  └── Check Authentication (ApiKeyFilter)
+POST /api/v1/carts/add-items
+  └── Find cart by Session ID
+  └── If not found → Create new Cart
+  └── For each requested item:
+        ├── Check if stock >= (cart quantity + requested quantity)
+        ├── If item exists in cart → Increment quantity
+        └── If item does not exist → Add new CartItem
+  └── Save Cart
+  └── CampaignEngine.evaluateBestCampaign() (On-the-fly calculation)
+  └── Return CartResponse DTO with calculated financial totals
+```
+
+### Checkout Flow (Cart to Order)
+
+```
+POST /api/v1/orders/from-cart/{sessionId}
+  └── Find Cart by Session ID
+  └── Validate cart is not empty
   └── Begin Transaction
-  └── Check stock for each requested item
-  └── Deduct stock and save Product
-  └── Create OrderItems and calculate Subtotal
-  └── CampaignEngine.evaluateBestCampaign()
-        ├── Fetch active campaigns (from Cache)
-        ├── BuyXGetYStrategy.calculateDiscount()
-        ├── CategoryDiscountStrategy.calculateDiscount()
-        └── TotalAmountDiscountStrategy.calculateDiscount()
-        └── Return highest discount
-  └── Apply Discount
+  └── For each CartItem:
+        ├── Verify stock again (stock could change while sitting in cart)
+        ├── Deduct stock and save Product (Permanent deduction)
+        └── Convert CartItem to OrderItem
+  └── Calculate Subtotal
+  └── CampaignEngine.evaluateBestCampaign() → Apply highest discount
   └── Shipping Calculation: (Subtotal - Discount) < 50 TL → +10 TL
   └── Save Order
-  └── Map to OrderResponse DTO
+  └── Delete Cart (Cascade delete CartItems)
+  └── Return OrderResponse DTO
 ```
