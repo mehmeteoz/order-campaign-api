@@ -1,23 +1,27 @@
 package com.ecommerce.order_api.service;
 
 import com.ecommerce.order_api.dto.*;
+import com.ecommerce.order_api.entity.Cart;
 import com.ecommerce.order_api.entity.Order;
 import com.ecommerce.order_api.entity.OrderItem;
 import com.ecommerce.order_api.entity.Product;
-import com.ecommerce.order_api.exception.InsufficientStockException;
-import com.ecommerce.order_api.exception.OrderNotFoundExeption;
-import com.ecommerce.order_api.exception.ProductNotFoundExeption;
+import com.ecommerce.order_api.exception.*;
+import com.ecommerce.order_api.repository.CartRepository;
 import com.ecommerce.order_api.repository.OrderRepository;
 import com.ecommerce.order_api.repository.ProductRepository;
 import lombok.Locked;
+
+
 import org.apache.coyote.Request;
 import org.hibernate.ReadOnlyMode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,14 +30,24 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final CampaignEngine campaignEngine;
+    private final CartRepository cartRepository;
 
-    private static final BigDecimal FREE_SHIPPING_LIMIT = new BigDecimal("50.00");
-    private static final BigDecimal SHIPPING_COST = new BigDecimal("10.00");
+    @Value("${shipping.free-limit}")
+    private BigDecimal FREE_SHIPPING_LIMIT;
 
-    public OrderService(ProductRepository productRepository, OrderRepository orderRepository,CampaignEngine campaignEngine) {
+    @Value("${shipping.cost}")
+    private BigDecimal SHIPPING_COST;
+
+
+    public OrderService(
+            ProductRepository productRepository,
+            OrderRepository orderRepository,
+            CampaignEngine campaignEngine,
+            CartRepository cartRepository) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.campaignEngine = campaignEngine;
+        this.cartRepository = cartRepository;
     }
 
     @Transactional
@@ -47,7 +61,7 @@ public class OrderService {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new ProductNotFoundExeption("Product not found. ID: " + itemRequest));
             if(product.getStock() < itemRequest.quantity()) {
-                throw new InsufficientStockException("Insufficient stock! Item: " + itemRequest + " quantity: " + product.getStock());
+                throw new InsufficientStockException("Insufficient stock! Item ID: " + itemRequest.productId() + " quantity: " + product.getStock());
             }
 
             product.setStock(product.getStock() - itemRequest.quantity());
@@ -72,6 +86,7 @@ public class OrderService {
 
         if (campaignResult.appliedCampaign() != null){
             order.setAppliedCampaignId(campaignResult.appliedCampaign().getId());
+            order.setAppliedCampaignName(campaignResult.appliedCampaign().getCampaignName());
         }
 
         BigDecimal amountAfterDiscount = totalAmount.subtract(campaignResult.discountAmount());
@@ -86,6 +101,68 @@ public class OrderService {
         order.setFinalAmount(amountAfterDiscount.add(order.getShippingAmount()));
 
         Order savedOrder = orderRepository.save(order);
+        return mapToOrderResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse createOrderFromCart(String sessionId) {
+        Cart cart = cartRepository.findBySessionId(sessionId)
+                .orElseThrow(() -> new CartNotFoundException("Cart not found for sessionID: " + sessionId));
+
+        if (cart.getCartItems().isEmpty()) {
+            throw new CartIsEmptyException("Cart not found for sessionID: " + sessionId);
+        }
+
+        Order order = new Order();
+        List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (var cartItem : cart.getCartItems()) {
+            Product product = cartItem.getProduct();
+
+            if (product.getStock() < cartItem.getQuantity()) {
+                throw new InsufficientStockException("Insufficient stock! Item ID: " + product.getId() + " quantity: " + cartItem.getQuantity());
+            }
+
+            product.setStock(product.getStock() - cartItem.getQuantity());
+            productRepository.save(product);
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setUnitPrice(product.getPrice());
+            orderItems.add(orderItem);
+
+            BigDecimal itemTotal = product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            totalAmount = totalAmount.add(itemTotal);
+        }
+
+        order.setOrderItems(orderItems);
+        order.setTotalAmount(totalAmount);
+
+        BestCampaignResult campaignResult = campaignEngine.evaluateBestCampaign(orderItems);
+        order.setDiscountAmount(campaignResult.discountAmount());
+
+        if (campaignResult.appliedCampaign() != null) {
+            order.setAppliedCampaignId(campaignResult.appliedCampaign().getId());
+            order.setAppliedCampaignName(campaignResult.appliedCampaign().getCampaignName());
+        }
+
+        BigDecimal amountAfterDiscount = totalAmount.subtract(campaignResult.discountAmount());
+
+        if (amountAfterDiscount.compareTo(FREE_SHIPPING_LIMIT) < 0) {
+            order.setShippingAmount(SHIPPING_COST);
+        } else  {
+            order.setShippingAmount(BigDecimal.ZERO);
+        }
+
+        order.setFinalAmount(amountAfterDiscount.add(order.getShippingAmount()));
+
+        Order savedOrder = orderRepository.save(order);
+
+        cartRepository.delete(cart);
+
         return mapToOrderResponse(savedOrder);
     }
 
@@ -114,6 +191,7 @@ public class OrderService {
                 orderItems,
                 order.getTotalAmount(),
                 order.getAppliedCampaignId(),
+                order.getAppliedCampaignName(),
                 order.getDiscountAmount(),
                 order.getShippingAmount(),
                 order.getFinalAmount(),

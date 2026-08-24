@@ -6,6 +6,7 @@ services:
       POSTGRES_USER: ecommerce_user
       POSTGRES_PASSWORD: super_password
       POSTGRES_DB: ecommerce_db
+      TZ: Europe/Istanbul
     ports:
       - "5432:5432"
     volumes:
@@ -24,6 +25,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: super_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       APP_SECURITY_API_KEY: VerySecretApiKey123
+      TZ: Europe/Istanbul
 
 volumes:
   postgres_data:

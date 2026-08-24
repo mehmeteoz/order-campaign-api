@@ -1,5 +1,6 @@
 package com.ecommerce.order_api.controller;
 
+import com.ecommerce.order_api.dto.CartRequest;
 import com.ecommerce.order_api.dto.OrderRequest;
 import com.ecommerce.order_api.dto.OrderResponse;
 import com.ecommerce.order_api.entity.Order;
@@ -28,6 +29,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable("id") Long orderId) {
 
@@ -35,6 +37,12 @@ public class OrderController {
 
         return ResponseEntity.status(HttpStatus.OK).body(orderResponse);
 
+    }
+
+    @PostMapping("/from-cart/{sessionId}")
+    public ResponseEntity<OrderResponse> createOrderFromCart(@PathVariable("sessionId") String sessionId) {
+        OrderResponse createdOrder = orderService.createOrderFromCart(sessionId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
 }
