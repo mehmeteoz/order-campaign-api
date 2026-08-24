@@ -25,6 +25,7 @@ public class Order {
     private BigDecimal finalAmount;
 
     private Long appliedCampaignId;
+    private String appliedCampaignName;
 
     private LocalDateTime createdAt;
 

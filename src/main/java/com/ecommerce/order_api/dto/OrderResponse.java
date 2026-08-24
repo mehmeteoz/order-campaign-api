@@ -9,6 +9,7 @@ public record OrderResponse (
         List<OrderItemResponse> items,
         BigDecimal totalAmount,
         Long appliedCampaignId,
+        String appliedCampaignName,
         BigDecimal discountAmount,
         BigDecimal shippingCost,
         BigDecimal finalAmount,

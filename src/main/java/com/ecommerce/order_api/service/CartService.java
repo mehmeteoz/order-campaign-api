@@ -114,6 +114,8 @@ public class CartService {
         BigDecimal finalAmount = amountAfterDiscount.add(shippingAmount);
         Long appliedCampaignId = campaignResult.appliedCampaign() != null ?
                 campaignResult.appliedCampaign().getId() : null;
+        String appliedCampaignName = campaignResult.appliedCampaign() != null ?
+                campaignResult.appliedCampaign().getCampaignName() : null;
 
         return new CartResponse(
                 savedCart.getId(),
@@ -121,6 +123,7 @@ public class CartService {
                 savedCart.getSessionId(),
                 totalAmount,
                 appliedCampaignId,
+                appliedCampaignName,
                 discountAmount,
                 shippingAmount,
                 finalAmount,

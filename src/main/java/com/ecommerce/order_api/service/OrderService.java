@@ -86,6 +86,7 @@ public class OrderService {
 
         if (campaignResult.appliedCampaign() != null){
             order.setAppliedCampaignId(campaignResult.appliedCampaign().getId());
+            order.setAppliedCampaignName(campaignResult.appliedCampaign().getCampaignName());
         }
 
         BigDecimal amountAfterDiscount = totalAmount.subtract(campaignResult.discountAmount());
@@ -145,6 +146,7 @@ public class OrderService {
 
         if (campaignResult.appliedCampaign() != null) {
             order.setAppliedCampaignId(campaignResult.appliedCampaign().getId());
+            order.setAppliedCampaignName(campaignResult.appliedCampaign().getCampaignName());
         }
 
         BigDecimal amountAfterDiscount = totalAmount.subtract(campaignResult.discountAmount());
@@ -189,6 +191,7 @@ public class OrderService {
                 orderItems,
                 order.getTotalAmount(),
                 order.getAppliedCampaignId(),
+                order.getAppliedCampaignName(),
                 order.getDiscountAmount(),
                 order.getShippingAmount(),
                 order.getFinalAmount(),

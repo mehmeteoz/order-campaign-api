@@ -10,6 +10,7 @@ public record CartResponse (
         String sessionId,
         BigDecimal totalAmount,
         Long appliedCampaignId,
+        String appliedCampaignName,
         BigDecimal discountAmount,
         BigDecimal shippingCost,
         BigDecimal finalAmount,
